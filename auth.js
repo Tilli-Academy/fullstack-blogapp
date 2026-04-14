@@ -72,25 +72,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // For OAuth providers (Google), ensure profile exists
-      if (account?.provider === "google") {
-        const existingProfile = await prisma.profile.findUnique({
-          where: { userId: user.id },
-        })
+      try {
+        // For OAuth providers (Google), ensure profile exists
+        if (account?.provider === "google") {
+          console.log("🔵 Google sign-in detected for user:", user.email)
 
-        if (!existingProfile) {
-          // Create profile with username from email
-          const username = user.email?.split("@")[0] + "_" + user.id.slice(-4)
-          await prisma.profile.create({
-            data: {
-              userId: user.id,
-              username,
-              role: "USER",
-            },
+          const existingProfile = await prisma.profile.findUnique({
+            where: { userId: user.id },
           })
+
+          if (!existingProfile) {
+            console.log("🟡 Creating new profile for user:", user.id)
+            const username = user.email?.split("@")[0] + "_" + user.id.slice(-4)
+            await prisma.profile.create({
+              data: {
+                userId: user.id,
+                username,
+                role: "USER",
+              },
+            })
+            console.log("✅ Profile created successfully:", username)
+          } else {
+            console.log("✅ Existing profile found:", existingProfile.username)
+          }
         }
+        return true
+      } catch (error) {
+        console.error("❌ Sign-in callback error:", error)
+        return false
       }
-      return true
     },
     async jwt({ token, user, account }) {
       if (user) {
