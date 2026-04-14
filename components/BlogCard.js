@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { calculateReadTime } from "@/lib/utils"
 
 export default function BlogCard({ post }) {
   const formattedDate = new Date(post.createdAt).toLocaleDateString("en-US", {
@@ -7,66 +8,74 @@ export default function BlogCard({ post }) {
     year: "numeric",
   })
 
+  const readTime = calculateReadTime(post.content || "")
+  const authorName = post.author?.profile?.username || post.author?.name || "Unknown"
+  const authorInitial = authorName[0].toUpperCase()
+
   return (
-    <article className="group relative overflow-hidden rounded-2xl bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-indigo-500/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-      {/* Content */}
-      <div className="relative p-6">
-        {/* Category badge (if you want to add categories later) */}
-        <div className="mb-4 flex items-center justify-between">
-          <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
-            Article
-          </span>
-          <div className="flex items-center gap-3 text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <span>{post._count?.likes || 0}</span>
+    <article className="py-8 group">
+      <div className="flex gap-6">
+        {/* Text content */}
+        <div className="flex-1 min-w-0">
+          {/* Author row */}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-[10px] font-medium text-white">
+              {authorInitial}
             </div>
-            <div className="flex items-center gap-1">
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-              </svg>
-              <span>{post._count?.comments || 0}</span>
-            </div>
+            <span className="text-sm text-gray-700">{authorName}</span>
+            <span className="text-sm text-gray-400">·</span>
+            <span className="text-sm text-gray-400">{formattedDate}</span>
           </div>
-        </div>
 
-        <Link href={`/blog/${post.slug}`} className="block">
-          <h2 className="mb-3 text-2xl font-bold text-gray-900 transition-colors duration-200 group-hover:text-blue-600">
-            {post.title}
-          </h2>
-        </Link>
-
-        {post.excerpt && (
-          <p className="mb-4 line-clamp-3 text-gray-600">
-            {post.excerpt}
-          </p>
-        )}
-
-        {/* Author and date */}
-        <div className="flex items-center gap-3 border-t pt-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-sm font-semibold text-white">
-            {(post.author?.profile?.username || post.author?.name || "U")[0].toUpperCase()}
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">
-              {post.author?.profile?.username || post.author?.name || "Unknown"}
-            </p>
-            <p className="text-xs text-gray-500">{formattedDate}</p>
-          </div>
-          <Link
-            href={`/blog/${post.slug}`}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors duration-200 group-hover:bg-blue-600 group-hover:text-white"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+          {/* Title */}
+          <Link href={`/blog/${post.slug}`} className="block">
+            <h2
+              className="text-xl font-bold text-gray-900 leading-snug group-hover:text-gray-600 transition-colors line-clamp-2"
+              style={{ fontFamily: "Georgia, serif" }}
+            >
+              {post.title}
+            </h2>
           </Link>
+
+          {/* Excerpt */}
+          {post.excerpt && (
+            <p className="mt-1 text-base text-gray-500 line-clamp-2">
+              {post.excerpt}
+            </p>
+          )}
+
+          {/* Meta row */}
+          <div className="mt-4 flex items-center gap-4 text-sm text-gray-400">
+            <span>{readTime}</span>
+            {post._count?.likes > 0 && (
+              <span className="flex items-center gap-1">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                {post._count.likes}
+              </span>
+            )}
+            {post._count?.comments > 0 && (
+              <span className="flex items-center gap-1">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+                {post._count.comments}
+              </span>
+            )}
+          </div>
         </div>
+
+        {/* Cover image thumbnail */}
+        {post.coverImage && (
+          <Link href={`/blog/${post.slug}`} className="flex-shrink-0">
+            <img
+              src={post.coverImage}
+              alt=""
+              className="h-28 w-28 rounded object-cover sm:h-32 sm:w-40"
+            />
+          </Link>
+        )}
       </div>
     </article>
   )

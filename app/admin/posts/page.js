@@ -1,5 +1,6 @@
-import { getAdminPosts, deletePost } from "@/actions/posts"
+import { getAdminPosts } from "@/actions/posts"
 import Link from "next/link"
+import DeletePostButton from "@/components/DeletePostButton"
 
 export default async function AdminPostsPage() {
   const posts = await getAdminPosts()
@@ -55,19 +56,11 @@ export default async function AdminPostsPage() {
                   <div className="flex items-center justify-end gap-2">
                     <Link
                       href={`/admin/posts/${post.id}/edit`}
-                      className="text-blue-600 hover:underline"
+                      className="text-blue-600 hover:underline text-sm"
                     >
                       Edit
                     </Link>
-                    <form action={deletePost}>
-                      <input type="hidden" name="postId" value={post.id} />
-                      <button
-                        type="submit"
-                        className="text-red-600 hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </form>
+                    <DeletePostButton postId={post.id} variant="simple" />
                   </div>
                 </td>
               </tr>

@@ -4,7 +4,6 @@ import { getToken } from "next-auth/jwt"
 export async function middleware(req) {
   const { pathname } = req.nextUrl
 
-  // Get token from cookies (works in Edge runtime)
   const token = await getToken({
     req,
     secret: process.env.AUTH_SECRET
@@ -12,7 +11,7 @@ export async function middleware(req) {
 
   const isLoggedIn = !!token
 
-  // Protect admin routes
+  // Protect admin routes — require admin role
   if (pathname.startsWith("/admin")) {
     if (!isLoggedIn) {
       const loginUrl = new URL("/login", req.url)
@@ -20,9 +19,17 @@ export async function middleware(req) {
       return NextResponse.redirect(loginUrl)
     }
 
-    // Check if user has admin role (from JWT token)
     if (token?.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/", req.url))
+    }
+  }
+
+  // Protect /write routes — require any logged-in user
+  if (pathname.startsWith("/write")) {
+    if (!isLoggedIn) {
+      const loginUrl = new URL("/login", req.url)
+      loginUrl.searchParams.set("redirectTo", pathname)
+      return NextResponse.redirect(loginUrl)
     }
   }
 

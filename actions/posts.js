@@ -19,12 +19,46 @@ async function requireAdmin() {
   return session.user
 }
 
+async function requireAuth() {
+  const session = await auth()
+
+  if (!session?.user) {
+    throw new Error("Not authenticated")
+  }
+
+  return session.user
+}
+
+async function requireOwnerOrAdmin(postId) {
+  const session = await auth()
+
+  if (!session?.user) {
+    throw new Error("Not authenticated")
+  }
+
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { authorId: true },
+  })
+
+  if (!post) {
+    throw new Error("Post not found")
+  }
+
+  if (session.user.role !== "ADMIN" && post.authorId !== session.user.id) {
+    throw new Error("Not authorized")
+  }
+
+  return session.user
+}
+
 export async function createPost(prevState, formData) {
-  const user = await requireAdmin()
+  const user = await requireAuth()
 
   const title = formData.get("title")
   const content = formData.get("content")
   const excerpt = formData.get("excerpt")
+  const coverImage = formData.get("coverImage")
   const published = formData.get("published") === "on"
 
   const slug =
@@ -41,7 +75,8 @@ export async function createPost(prevState, formData) {
         title,
         slug,
         content,
-        excerpt,
+        excerpt: excerpt || null,
+        coverImage: coverImage || null,
         authorId: user.id,
         published,
       },
@@ -53,24 +88,27 @@ export async function createPost(prevState, formData) {
 
   revalidatePath("/")
   revalidatePath("/admin/posts")
-  redirect("/admin/posts")
+  redirect("/")
 }
 
-export async function updatePost(prevState, postId, formData) {
-  await requireAdmin()
+export async function updatePost(postId, prevState, formData) {
+  await requireOwnerOrAdmin(postId)
 
   const title = formData.get("title")
   const content = formData.get("content")
   const excerpt = formData.get("excerpt")
+  const coverImage = formData.get("coverImage")
   const published = formData.get("published") === "on"
 
+  let post
   try {
-    await prisma.post.update({
+    post = await prisma.post.update({
       where: { id: postId },
       data: {
         title,
         content,
-        excerpt,
+        excerpt: excerpt || null,
+        coverImage: coverImage || null,
         published,
       },
     })
@@ -81,13 +119,12 @@ export async function updatePost(prevState, postId, formData) {
 
   revalidatePath("/")
   revalidatePath("/admin/posts")
-  redirect("/admin/posts")
+  revalidatePath(`/blog/${post.slug}`)
+  redirect(`/blog/${post.slug}`)
 }
 
-export async function deletePost(prevState, formData) {
-  await requireAdmin()
-
-  const postId = formData.get("postId")
+export async function deletePost(postId) {
+  await requireOwnerOrAdmin(postId)
 
   try {
     await prisma.post.delete({
@@ -95,11 +132,12 @@ export async function deletePost(prevState, formData) {
     })
   } catch (error) {
     console.error("Delete post error:", error)
-    return { error: "Failed to delete post" }
+    throw error
   }
 
   revalidatePath("/")
   revalidatePath("/admin/posts")
+  redirect("/")
 }
 
 export async function getPost(slug) {
@@ -128,7 +166,6 @@ export async function getPost(slug) {
   }
 }
 
-// Helper to get all post slugs for static generation
 export async function getAllPostSlugs() {
   try {
     const posts = await prisma.post.findMany({
@@ -213,6 +250,30 @@ export async function getAdminPosts() {
     return posts
   } catch (error) {
     console.error("Get admin posts error:", error)
+    return []
+  }
+}
+
+export async function getUserPosts() {
+  const user = await requireAuth()
+
+  try {
+    const posts = await prisma.post.findMany({
+      where: { authorId: user.id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+      },
+    })
+
+    return posts
+  } catch (error) {
+    console.error("Get user posts error:", error)
     return []
   }
 }
