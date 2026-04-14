@@ -5,7 +5,6 @@ export default function BlogCard({ post }) {
   const formattedDate = new Date(post.createdAt).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric",
   })
 
   const readTime = calculateReadTime(post.content || "")
@@ -13,40 +12,43 @@ export default function BlogCard({ post }) {
   const authorInitial = authorName[0].toUpperCase()
 
   return (
-    <article className="py-8 group">
-      <div className="flex gap-6">
-        {/* Text content */}
-        <div className="flex-1 min-w-0">
-          {/* Author row */}
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-[10px] font-medium text-white">
-              {authorInitial}
-            </div>
-            <span className="text-sm text-gray-700">{authorName}</span>
-            <span className="text-sm text-gray-400">·</span>
-            <span className="text-sm text-gray-400">{formattedDate}</span>
+    <article className="group flex gap-8 pb-12 border-b border-gray-100 last:border-0">
+      {/* Text Content - Takes up more space */}
+      <div className="flex-1 min-w-0">
+        {/* Author Info */}
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-[10px] font-medium text-white">
+            {authorInitial}
+          </div>
+          <span className="text-sm font-medium text-gray-900">{authorName}</span>
+        </div>
+
+        {/* Title - Larger */}
+        <Link href={`/blog/${post.slug}`} className="block mb-3">
+          <h2
+            className="text-2xl font-bold text-gray-900 leading-snug line-clamp-2 group-hover:opacity-60 transition-opacity"
+            style={{ fontFamily: "Georgia, serif" }}
+          >
+            {post.title}
+          </h2>
+        </Link>
+
+        {/* Excerpt - Larger */}
+        {post.excerpt && (
+          <p className="mb-6 text-base text-gray-600 line-clamp-3 leading-relaxed">
+            {post.excerpt}
+          </p>
+        )}
+
+        {/* Meta Info */}
+        <div className="flex items-center justify-between text-sm text-gray-500">
+          <div className="flex items-center gap-2">
+            <span>{formattedDate}</span>
+            <span>·</span>
+            <span>{readTime}</span>
           </div>
 
-          {/* Title */}
-          <Link href={`/blog/${post.slug}`} className="block">
-            <h2
-              className="text-xl font-bold text-gray-900 leading-snug group-hover:text-gray-600 transition-colors line-clamp-2"
-              style={{ fontFamily: "Georgia, serif" }}
-            >
-              {post.title}
-            </h2>
-          </Link>
-
-          {/* Excerpt */}
-          {post.excerpt && (
-            <p className="mt-1 text-base text-gray-500 line-clamp-2">
-              {post.excerpt}
-            </p>
-          )}
-
-          {/* Meta row */}
-          <div className="mt-4 flex items-center gap-4 text-sm text-gray-400">
-            <span>{readTime}</span>
+          <div className="flex items-center gap-4">
             {post._count?.likes > 0 && (
               <span className="flex items-center gap-1">
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,18 +67,23 @@ export default function BlogCard({ post }) {
             )}
           </div>
         </div>
+      </div>
 
-        {/* Cover image thumbnail */}
-        {post.coverImage && (
-          <Link href={`/blog/${post.slug}`} className="flex-shrink-0">
+      {/* Cover Image - Right Side */}
+      {post.coverImage && (
+        <Link
+          href={`/blog/${post.slug}`}
+          className="flex-shrink-0 block overflow-hidden"
+        >
+          <div className="relative h-32 w-32 sm:h-36 sm:w-36 overflow-hidden">
             <img
               src={post.coverImage}
-              alt=""
-              className="h-28 w-28 rounded object-cover sm:h-32 sm:w-40"
+              alt={post.title}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
-          </Link>
-        )}
-      </div>
+          </div>
+        </Link>
+      )}
     </article>
   )
 }
