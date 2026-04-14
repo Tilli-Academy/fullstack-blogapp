@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import Credentials from "next-auth/providers/credentials"
+import Google from "next-auth/providers/google"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
@@ -13,6 +14,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
   },
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      profile(profile) {
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          role: "USER", // Default role for Google signups
+        }
+      },
+    }),
     Credentials({
       name: "credentials",
       credentials: {
@@ -57,10 +71,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async signIn({ user, account, profile }) {
+      // For OAuth providers (Google), ensure profile exists
+      if (account?.provider === "google") {
+        const existingProfile = await prisma.profile.findUnique({
+          where: { userId: user.id },
+        })
+
+        if (!existingProfile) {
+          // Create profile with username from email
+          const username = user.email?.split("@")[0] + "_" + user.id.slice(-4)
+          await prisma.profile.create({
+            data: {
+              userId: user.id,
+              username,
+              role: "USER",
+            },
+          })
+        }
+      }
+      return true
+    },
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
         token.role = user.role
+      }
+      // Fetch role from profile if not already in token
+      if (!token.role) {
+        const profile = await prisma.profile.findUnique({
+          where: { userId: token.id },
+        })
+        token.role = profile?.role || "USER"
       }
       return token
     },
