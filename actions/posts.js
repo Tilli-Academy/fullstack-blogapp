@@ -277,3 +277,79 @@ export async function getUserPosts() {
     return []
   }
 }
+
+export async function getPopularPosts(limit = 5) {
+  try {
+    const posts = await prisma.post.findMany({
+      where: { published: true },
+      orderBy: [
+        { likes: { _count: "desc" } },
+        { comments: { _count: "desc" } },
+      ],
+      take: limit,
+      include: {
+        author: {
+          include: {
+            profile: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+      },
+    })
+
+    return posts
+  } catch (error) {
+    console.error("Get popular posts error:", error)
+    return []
+  }
+}
+
+export async function getTopAuthors(limit = 3) {
+  try {
+    // Get users with their post counts
+    const users = await prisma.user.findMany({
+      take: limit * 2, // Get more to filter
+      include: {
+        profile: true,
+        posts: {
+          where: { published: true },
+          select: { id: true },
+        },
+        _count: {
+          select: {
+            posts: true,
+          },
+        },
+      },
+      orderBy: {
+        posts: {
+          _count: "desc",
+        },
+      },
+    })
+
+    // Filter users who have profiles and posts
+    const authorsWithCounts = users
+      .filter((user) => user.profile && user.posts.length > 0)
+      .slice(0, limit)
+      .map((user) => ({
+        id: user.profile.id,
+        username: user.profile.username,
+        avatar: user.profile.avatar,
+        _count: {
+          posts: user.posts.length,
+          likes: 0,
+        },
+      }))
+
+    return authorsWithCounts
+  } catch (error) {
+    console.error("Get top authors error:", error)
+    return []
+  }
+}
