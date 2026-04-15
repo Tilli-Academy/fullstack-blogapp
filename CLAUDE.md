@@ -2,7 +2,7 @@
 
 **CHOSEN STACK**: Next.js 16 + NextAuth v5 + PostgreSQL + Prisma + Tailwind CSS
 
-# Full Stack Blog Application - Tech Stack Analysis
+ # Full Stack Blog Application - Tech Stack Analysis
 
 ## Project Requirements Summary
 
