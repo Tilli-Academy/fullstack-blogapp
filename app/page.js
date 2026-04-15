@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import { getPosts } from "@/actions/posts"
 import { getFollowingFeed, getStaffPicks, getSuggestedUsers } from "@/actions/follows"
+import { getCurrentUserProfile } from "@/actions/users"
 import { auth } from "@/auth"
 import { SidebarProvider } from "@/components/SidebarProvider"
 import SidebarToggle from "@/components/SidebarToggle"
@@ -23,11 +24,13 @@ export default async function HomePage() {
     followingData,
     staffPicks,
     suggestedUsers,
+    userProfile,
   ] = await Promise.all([
     getPosts(1, 30),
     isLoggedIn ? getFollowingFeed() : Promise.resolve({ posts: [] }),
     getStaffPicks(3),
     getSuggestedUsers(5),
+    isLoggedIn ? getCurrentUserProfile() : Promise.resolve(null),
   ])
 
   return (
@@ -74,7 +77,11 @@ export default async function HomePage() {
 
           <div className="flex gap-8">
             {/* Left Sidebar */}
-            <Sidebar isLoggedIn={isLoggedIn} isAdmin={isAdmin} />
+            <Sidebar
+              isLoggedIn={isLoggedIn}
+              isAdmin={isAdmin}
+              username={userProfile?.username}
+            />
 
             {/* Center Feed */}
             <main className="mx-auto flex-1 min-w-0 max-w-2xl">

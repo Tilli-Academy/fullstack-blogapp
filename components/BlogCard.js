@@ -16,14 +16,17 @@ export default function BlogCard({ post }) {
       {/* Text Content */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Author metadata - top left */}
-        <div className="mb-2 flex items-center gap-2">
+        <Link
+          href={`/profile/${post.author?.profile?.username || authorName}`}
+          className="mb-2 flex items-center gap-2 w-fit hover:opacity-70 transition-opacity"
+        >
           <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 text-[10px] font-medium text-white flex-shrink-0">
             {authorInitial}
           </div>
           <span className="text-sm font-medium text-gray-900 truncate">
             {authorName}
           </span>
-        </div>
+        </Link>
 
         {/* Large bold serif headline */}
         <Link href={`/blog/${post.slug}`} className="block mb-1.5">

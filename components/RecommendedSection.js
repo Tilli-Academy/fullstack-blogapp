@@ -19,24 +19,25 @@ export default function RecommendedSection({
               const authorName =
                 post.author?.profile?.username || post.author?.name || "Unknown"
               return (
-                <Link
-                  key={post.id}
-                  href={`/blog/${post.slug}`}
-                  className="group block"
-                >
-                  <div className="flex items-center gap-2 mb-1.5">
+                <div key={post.id} className="group">
+                  <Link
+                    href={`/profile/${post.author?.profile?.username || authorName}`}
+                    className="flex items-center gap-2 mb-1.5 w-fit hover:opacity-70 transition-opacity"
+                  >
                     <div className="h-5 w-5 rounded-full bg-gray-900 text-[10px] font-medium text-white flex items-center justify-center">
                       {authorName[0].toUpperCase()}
                     </div>
                     <span className="text-xs text-gray-600">{authorName}</span>
-                  </div>
-                  <h4
-                    className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-gray-600 transition-colors leading-snug"
-                    style={{ fontFamily: "Georgia, serif" }}
-                  >
-                    {post.title}
-                  </h4>
-                </Link>
+                  </Link>
+                  <Link href={`/blog/${post.slug}`}>
+                    <h4
+                      className="text-sm font-bold text-gray-900 line-clamp-2 group-hover:text-gray-600 transition-colors leading-snug"
+                      style={{ fontFamily: "Georgia, serif" }}
+                    >
+                      {post.title}
+                    </h4>
+                  </Link>
+                </div>
               )
             })}
           </div>
@@ -52,21 +53,25 @@ export default function RecommendedSection({
           <div className="space-y-4">
             {suggestedUsers.map((user) => (
               <div key={user.id} className="flex items-start gap-3">
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-medium text-gray-700">
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.username}
-                      className="h-full w-full rounded-full object-cover"
-                    />
-                  ) : (
-                    user.username[0]?.toUpperCase()
-                  )}
-                </div>
+                <Link href={`/profile/${user.username}`}>
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-medium text-gray-700 hover:opacity-70 transition-opacity">
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.username}
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : (
+                      user.username[0]?.toUpperCase()
+                    )}
+                  </div>
+                </Link>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {user.username}
-                  </p>
+                  <Link href={`/profile/${user.username}`}>
+                    <p className="text-sm font-medium text-gray-900 truncate hover:opacity-70 transition-opacity">
+                      {user.username}
+                    </p>
+                  </Link>
                   <p className="text-xs text-gray-500 line-clamp-1">
                     {user.bio || `${user.postCount} stories`}
                   </p>
