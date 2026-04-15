@@ -1,7 +1,7 @@
 # Full Stack Blog Application - Built with NextAuth + PostgreSQL + Prisma
 
 **CHOSEN STACK**: Next.js 16 + NextAuth v5 + PostgreSQL + Prisma + Tailwind CSS
-
+   
  # Full Stack Blog Application - Tech Stack Analysis
 
 ## Project Requirements Summary
